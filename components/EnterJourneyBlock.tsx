@@ -101,19 +101,6 @@ const EnterKey = styled(motion.div)`
   }
 `;
 
-const EnterArrow = styled(motion.div)`
-  position: absolute;
-  bottom: 20%;
-  right: 20%;
-  width: 60px;
-  height: 60px;
-  z-index: 1;
-  svg {
-    width: 100%;
-    height: 100%;
-  }
-`;
-
 const GlowEffect = styled(motion.div)`
   position: absolute;
   top: 0;
@@ -161,20 +148,6 @@ export default function EnterJourneyBlock() {
       opacity: 1,
       scale: 1.3,
       transition: { duration: 0.3 },
-    },
-  };
-
-  const arrowVariants = {
-    initial: {
-      x: 0,
-    },
-    hover: {
-      x: -5,
-      transition: {
-        repeat: Number.POSITIVE_INFINITY,
-        repeatType: "reverse" as const,
-        duration: 0.5,
-      },
     },
   };
 
