@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styled from "styled-components";
 import { motion } from "framer-motion";
+import EnterButton from "./EnterButton";
+
 const BlockContainer = styled.section`
   height: 100vh;
   width: 100%;
@@ -58,8 +60,6 @@ const Title = styled.h2`
 
 const EnterKeyContainer = styled(motion.div)`
   position: relative;
-  width: 352px;
-  height: 156px;
   cursor: pointer;
   z-index: 1;
   @media (max-width: 768px) {
@@ -68,49 +68,17 @@ const EnterKeyContainer = styled(motion.div)`
   }
 `;
 
-const EnterKey = styled(motion.div)`
-  position: relative;
-  width: 352px;
-  height: 156px;
-  background-color: rgba(194, 126, 255, 0.2);
-  border-radius: 20px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: #c27eff;
-  font-size: 2.5rem;
-  font-weight: 600;
-  box-shadow: 0 0 30px rgba(194, 126, 255, 0.5);
-  overflow: hidden;
-  z-index: 1;
-
-  background-image: url("/images/enter.png");
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.1) 0%,
-      transparent 100%
-    );
-    pointer-events: none;
-  }
-`;
-
 const GlowEffect = styled(motion.div)`
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: 20px;
-  filter: blur(20px);
-  background-color: rgba(194, 126, 255, 0.3);
   z-index: -1;
+  opacity: 0.5;
+
+  & svg {
+    width: calc(100%);
+    height: calc(100%);
+    filter: blur(20px);
+    opacity: 0.7;
+  }
 `;
 
 export default function EnterJourneyBlock() {
@@ -127,6 +95,10 @@ export default function EnterJourneyBlock() {
       transition: { duration: 0.3 },
     },
     tap: {
+      scale: 0.95,
+      transition: { duration: 0.1 },
+    },
+    pressed: {
       scale: 0.95,
       transition: { duration: 0.1 },
     },
@@ -151,6 +123,20 @@ export default function EnterJourneyBlock() {
     },
   };
 
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter") {
+        handleKeyPress();
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleGlobalKeyDown);
+    };
+  }, []);
+
   return (
     <BlockContainer>
       <Title>Enter The Journey</Title>
@@ -159,6 +145,7 @@ export default function EnterJourneyBlock() {
         variants={containerVariants}
         whileHover="hover"
         whileTap="tap"
+        animate={isPressed ? "pressed" : ""}
         onClick={handleKeyPress}
         onKeyDown={(e) => e.key === "Enter" && handleKeyPress()}
         tabIndex={0}
@@ -171,9 +158,11 @@ export default function EnterJourneyBlock() {
           animate={isPressed ? "pressed" : "initial"}
           whileHover="hover"
           whileTap="tap"
-        />
+        >
+          <EnterButton />
+        </GlowEffect>
 
-        <EnterKey></EnterKey>
+        <EnterButton />
       </EnterKeyContainer>
     </BlockContainer>
   );

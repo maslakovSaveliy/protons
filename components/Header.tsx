@@ -6,6 +6,7 @@ import Link from "next/link";
 import LogoIcon from "./icons/Logo";
 import { motion, AnimatePresence } from "framer-motion";
 import Curve from "./icons/Curve";
+import { useRouter } from "next/navigation";
 
 const HeaderContainer = styled.header`
   position: fixed;
@@ -38,6 +39,7 @@ const CurveIcon = styled(Curve)<{ isOpen: boolean }>`
 
 const Logo = styled.div`
   padding: 2.56px 0;
+  cursor: pointer;
 `;
 
 const Nav = styled.nav`
@@ -124,6 +126,7 @@ const MotionDropdownContent = styled(motion.div)`
 `;
 
 export default function Header() {
+  const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDropdownActive, setIsDropdownActive] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -181,7 +184,7 @@ export default function Header() {
   return (
     <HeaderContainer>
       <Logo>
-        <LogoIcon />
+        <LogoIcon onClick={() => router.push("/")} />
       </Logo>
 
       <Nav>

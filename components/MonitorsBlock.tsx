@@ -120,7 +120,7 @@ const ScrollIndicator = styled.div`
   font-size: 2rem;
   opacity: 0.8;
   z-index: 1;
-
+  cursor: pointer;
   svg {
     animation: bounce 2s infinite;
   }
@@ -216,6 +216,19 @@ export default function MonitorsBlock() {
   //   };
   // }, []);
 
+  const scrollToNextBlock = () => {
+    const nextBlock = document.getElementById("EnterJourneyBlock");
+    if (nextBlock) {
+      nextBlock.scrollIntoView({ behavior: "smooth" });
+    } else {
+      // Прокрутить на высоту экрана вниз как запасной вариант
+      window.scrollBy({
+        top: window.innerHeight,
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
     <BlockContainer>
       {/* <MonitorsSetup>
@@ -244,7 +257,7 @@ export default function MonitorsBlock() {
         ))}
       </MonitorsSetup> */}
 
-      <ScrollIndicator>
+      <ScrollIndicator onClick={scrollToNextBlock}>
         <span>Scroll for more</span>
         <ArrowDown color="var(--color-white)" />
       </ScrollIndicator>
