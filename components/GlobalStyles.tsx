@@ -38,6 +38,23 @@ const GlobalStyles = createGlobalStyle`
     overflow-x: hidden;
   }
   
+  /* Скрыть скролл бар для всех элементов */
+  ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+  
+  /* Для Firefox */
+  * {
+    scrollbar-width: none;
+  }
+  
+  /* Для IE и Edge */
+  * {
+    -ms-overflow-style: none;
+  }
+  
   a {
     color: inherit;
     text-decoration: none;

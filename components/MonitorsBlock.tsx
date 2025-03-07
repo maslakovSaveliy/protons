@@ -125,6 +125,11 @@ const ScrollIndicator = styled.div`
     animation: bounce 2s infinite;
   }
 
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+    flex-direction: column;
+  }
+
   @keyframes bounce {
     0%,
     20%,

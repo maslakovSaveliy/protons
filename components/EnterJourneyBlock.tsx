@@ -55,6 +55,12 @@ const Title = styled.h2`
 
   @media (max-width: 768px) {
     font-size: 3rem;
+    margin-bottom: 3rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 2.5rem;
+    margin-bottom: 2.5rem;
   }
 `;
 
@@ -72,12 +78,24 @@ const GlowEffect = styled(motion.div)`
   position: absolute;
   z-index: -1;
   opacity: 0.5;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
 
   & svg {
-    width: calc(100%);
-    height: calc(100%);
+    width: 100%;
+    height: 100%;
     filter: blur(20px);
     opacity: 0.7;
+
+    @media (max-width: 768px) {
+      filter: blur(15px);
+    }
+
+    @media (max-width: 480px) {
+      filter: blur(10px);
+    }
   }
 `;
 

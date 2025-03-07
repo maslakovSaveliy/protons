@@ -1,11 +1,17 @@
 export default function EnterButton() {
   return (
     <svg
-      width="416"
-      height="336"
+      width="100%"
+      height="100%"
       viewBox="0 0 416 336"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      preserveAspectRatio="xMidYMid meet"
+      style={{
+        transform: "translateZ(0)",
+        WebkitTransform: "translateZ(0)",
+        WebkitBackfaceVisibility: "hidden",
+      }}
     >
       <path
         d="M412 19.8975V316.513C412 318.548 411.618 320.487 410.919 322.268C410.188 324.144 409.107 325.861 407.771 327.323C404.846 330.439 400.713 332.41 396.103 332.41H19.4275C10.6521 332.41 3.53 325.288 3.53 316.513V170.256C3.53 161.48 10.6521 154.358 19.4275 154.358H133.031V19.8975C133.031 11.1221 140.153 4 148.928 4H396.071C404.846 4 411.968 11.1221 411.968 19.8975H412Z"
