@@ -50,7 +50,7 @@ const VideoBackground = styled.video`
   object-fit: cover;
   z-index: 0;
   opacity: 0;
-  transition: opacity 1.5s ease-in-out;
+  transition: opacity 0.8s ease-in-out;
 
   &.loaded {
     opacity: 1;
@@ -74,6 +74,12 @@ const BackgroundPoster = styled.div`
   background-size: cover;
   z-index: 0;
   transition: opacity 1.5s ease-in-out;
+
+  @media (max-width: 768px) {
+    background-position: 45%;
+    scale: 1.1;
+    transform: translate(-3px, -23px);
+  }
 `;
 
 const ScrollIndicator = styled.div`
@@ -144,8 +150,8 @@ export default function MonitorsBlock() {
   // Устанавливаем правильные URL для видео
   const getVideoUrl = useCallback(() => {
     const baseUrl = isMobile
-      ? "/videos/background-mobile-optimized"
-      : "/videos/background-desktop-optimized";
+      ? "/videos/background-mobile"
+      : "/videos/background-desktop";
 
     // Добавляем временную метку для предотвращения кэширования во время разработки
     // В продакшене эту часть можно удалить
@@ -153,84 +159,58 @@ export default function MonitorsBlock() {
       process.env.NODE_ENV === "development" ? `?v=${Date.now()}` : "";
 
     return {
-      webm: `${baseUrl}.webm${cacheBuster}`,
       mp4: `${baseUrl}.mp4${cacheBuster}`,
     };
   }, [isMobile]);
 
-  // Оптимизированная и плавная загрузка видео
+  // Оптимизированная потоковая загрузка видео
   useEffect(() => {
     if (!videoRef.current) return;
 
-    // Настраиваем видео для прогрессивной загрузки
+    // Настраиваем параметры для потоковой загрузки
     videoRef.current.preload = "auto";
+    videoRef.current.load();
 
-    const loadVideo = () => {
-      if (!videoRef.current) return;
-
-      // Загружаем видео
-      videoRef.current.load();
-
-      // Устанавливаем обработчики для отслеживания загрузки и начала воспроизведения
-      const handleCanPlay = () => {
-        if (videoRef.current && !videoStarted) {
-          // Устанавливаем флаг готовности видео, но не меняем его видимость сразу
-          setVideoStarted(true);
-
-          // Небольшая задержка перед началом воспроизведения для плавного перехода
-          setTimeout(() => {
-            videoRef.current
-              ?.play()
-              .then(() => {
-                setVideoStarted(true);
-                // Показываем видео только после начала воспроизведения
-                setTimeout(() => {
-                  if (videoRef.current) {
-                    videoRef.current.classList.add("loaded");
-                  }
-                }, 100);
-              })
-              .catch((e) => {
-                console.error("Ошибка автовоспроизведения:", e);
-              });
-          }, 300);
-        }
-      };
-
-      const handleLoadedData = () => {
-        // Видео загрузилось, но мы не показываем его сразу
-        setVideoStarted(true);
-      };
-
-      const handleTimeUpdate = () => {
-        // Убеждаемся, что воспроизведение действительно началось перед тем как делать переход
-        if (
-          !videoStarted &&
-          videoRef.current &&
-          videoRef.current.currentTime > 0
-        ) {
-          setVideoStarted(true);
-        }
-      };
-
-      videoRef.current.addEventListener("canplay", handleCanPlay);
-      videoRef.current.addEventListener("loadeddata", handleLoadedData);
-      videoRef.current.addEventListener("timeupdate", handleTimeUpdate);
-
-      return () => {
-        if (videoRef.current) {
-          videoRef.current.removeEventListener("canplay", handleCanPlay);
-          videoRef.current.removeEventListener("loadeddata", handleLoadedData);
-          videoRef.current.removeEventListener("timeupdate", handleTimeUpdate);
-        }
-      };
+    const handleCanPlayThrough = () => {
+      // Видео загрузило достаточно данных для плавного воспроизведения
+      if (videoRef.current && !videoStarted) {
+        videoRef.current
+          .play()
+          .then(() => {
+            // Немедленно показываем видео
+            videoRef.current?.classList.add("loaded");
+            setVideoStarted(true);
+          })
+          .catch((error) => {
+            console.error("Ошибка воспроизведения видео:", error);
+          });
+      }
     };
 
-    // Инициализируем загрузку видео после монтирования компонента с небольшой задержкой
-    const timer = setTimeout(loadVideo, 200);
+    const handleLoadStart = () => {
+      // Видео начало загружаться
+      console.log("Видео начало загружаться");
+    };
+
+    const handlePlaying = () => {
+      // Видео начало воспроизводиться
+      setVideoStarted(true);
+      if (videoRef.current) {
+        videoRef.current.classList.add("loaded");
+      }
+    };
+
+    // События для отслеживания потоковой загрузки
+    videoRef.current.addEventListener("canplay", handleCanPlayThrough);
+    videoRef.current.addEventListener("loadstart", handleLoadStart);
+    videoRef.current.addEventListener("playing", handlePlaying);
 
     return () => {
-      clearTimeout(timer);
+      if (videoRef.current) {
+        videoRef.current.removeEventListener("canplay", handleCanPlayThrough);
+        videoRef.current.removeEventListener("loadstart", handleLoadStart);
+        videoRef.current.removeEventListener("playing", handlePlaying);
+      }
     };
   }, [videoStarted]);
 
@@ -246,12 +226,10 @@ export default function MonitorsBlock() {
 
       const urls = getVideoUrl();
 
-      // Обновляем источники для тега video
-      const sources = videoRef.current.getElementsByTagName("source");
-      if (sources[0]) sources[0].src = urls.webm;
-      if (sources[1]) sources[1].src = urls.mp4;
+      // Устанавливаем атрибуты для потоковой загрузки
+      videoRef.current.src = urls.mp4;
 
-      // Перезагружаем видео с новыми источниками
+      // Предварительно загружаем несколько секунд видео, затем запускаем воспроизведение
       videoRef.current.load();
     }
   }, [isMobile, getVideoUrl]);
@@ -278,7 +256,7 @@ export default function MonitorsBlock() {
         style={{ opacity: videoStarted ? 0 : 1 }}
       />
 
-      {/* Видео-фон с плавным появлением */}
+      {/* Видео-фон с плавным появлением и потоковой загрузкой */}
       <VideoBackground
         ref={videoRef}
         loop
@@ -286,10 +264,8 @@ export default function MonitorsBlock() {
         playsInline
         poster="/images/background.png"
         preload="auto"
-      >
-        <source type="video/webm" />
-        <source type="video/mp4" />
-      </VideoBackground>
+        autoPlay
+      />
 
       <ScrollIndicator onClick={scrollToNextBlock}>
         <span>Scroll for more</span>

@@ -3,7 +3,7 @@ const nextConfig = {
   async headers() {
     return [
       {
-        // Настройка кэширования для видеофайлов
+        // Настройка кэширования и потоковой передачи для видеофайлов
         source: '/videos/:path*',
         headers: [
           {
@@ -11,6 +11,14 @@ const nextConfig = {
             // Кэшировать на 1 год (31536000 секунд)
             value: 'public, max-age=31536000, immutable',
           },
+          {
+            key: 'Accept-Ranges',
+            value: 'bytes',
+          },
+          {
+            key: 'Content-Type',
+            value: 'video/mp4',
+          }
         ],
       },
       {
