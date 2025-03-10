@@ -7,7 +7,7 @@ import LogoIcon from "./icons/Logo";
 import { motion, AnimatePresence } from "framer-motion";
 import Curve from "./icons/Curve";
 import { useRouter } from "next/navigation";
-import Menu from "./icons/Menu";
+// import Menu from "./icons/Menu";
 import Close from "./icons/Close";
 
 const HeaderContainer = styled.header`
@@ -56,15 +56,15 @@ const Logo = styled.div`
   cursor: pointer;
 `;
 
-const Nav = styled.nav`
-  display: flex;
-  align-items: center;
-  gap: 30px;
+// const Nav = styled.nav`
+//   display: flex;
+//   align-items: center;
+//   gap: 30px;
 
-  @media (max-width: 1024px) {
-    gap: 20px;
-  }
-`;
+//   @media (max-width: 1024px) {
+//     gap: 20px;
+//   }
+// `;
 
 const NavItem = styled.div`
   position: relative;
@@ -87,86 +87,86 @@ const NavItem = styled.div`
   }
 `;
 
-const DropdownContainer = styled.div<{ isOpen: boolean }>`
-  position: relative;
-  border-radius: 0.5rem;
-  background: ${(props) =>
-    props.isOpen ? "var(--color-white)" : "transparent"};
-  transition: background-color 0.3s ease, border-radius 0.3s ease;
+// const DropdownContainer = styled.div<{ isOpen: boolean }>`
+//   position: relative;
+//   border-radius: 0.5rem;
+//   background: ${(props) =>
+//     props.isOpen ? "var(--color-white)" : "transparent"};
+//   transition: background-color 0.3s ease, border-radius 0.3s ease;
 
-  &:hover {
-    background: ${(props) =>
-      props.isOpen ? "var(--color-white)" : "transparent"};
-  }
-`;
+//   &:hover {
+//     background: ${(props) =>
+//       props.isOpen ? "var(--color-white)" : "transparent"};
+//   }
+// `;
 
-const DropdownButton = styled.button<{ isOpen: boolean }>`
-  background: transparent;
-  border: none;
-  width: 100%;
-  color: ${(props) =>
-    props.isOpen ? "var(--color-black)" : "var(--color-white)"};
-  font-size: var(--font-size-body-l);
-  line-height: var(--line-height-body-l);
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.5rem 1rem;
-  text-align: left;
-  cursor: pointer;
-  transition: color 0.3s ease;
-  border-radius: 0.5rem;
-`;
+// const DropdownButton = styled.button<{ isOpen: boolean }>`
+//   background: transparent;
+//   border: none;
+//   width: 100%;
+//   color: ${(props) =>
+//     props.isOpen ? "var(--color-black)" : "var(--color-white)"};
+//   font-size: var(--font-size-body-l);
+//   line-height: var(--line-height-body-l);
+//   display: flex;
+//   align-items: center;
+//   gap: 0.25rem;
+//   padding: 0.5rem 1rem;
+//   text-align: left;
+//   cursor: pointer;
+//   transition: color 0.3s ease;
+//   border-radius: 0.5rem;
+// `;
 
-const MotionDropdownContent = styled(motion.div)`
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  margin-top: -7px;
-  padding-top: 7px;
-  background: var(--color-white);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-top: none;
-  border-bottom-left-radius: 0.5rem;
-  border-bottom-right-radius: 0.5rem;
-  overflow: hidden;
-  z-index: 10;
+// const MotionDropdownContent = styled(motion.div)`
+//   position: absolute;
+//   top: 100%;
+//   left: 0;
+//   width: 100%;
+//   margin-top: -7px;
+//   padding-top: 7px;
+//   background: var(--color-white);
+//   border: 1px solid rgba(0, 0, 0, 0.1);
+//   border-top: none;
+//   border-bottom-left-radius: 0.5rem;
+//   border-bottom-right-radius: 0.5rem;
+//   overflow: hidden;
+//   z-index: 10;
 
-  a {
-    display: block;
-    padding: 0.5rem 1rem;
-    color: var(--color-black);
-    font-size: var(--font-size-body-l);
-    line-height: var(--line-height-body-l);
-    text-decoration: none;
-    transition: background 0.3s ease, color 0.3s ease;
+//   a {
+//     display: block;
+//     padding: 0.5rem 1rem;
+//     color: var(--color-black);
+//     font-size: var(--font-size-body-l);
+//     line-height: var(--line-height-body-l);
+//     text-decoration: none;
+//     transition: background 0.3s ease, color 0.3s ease;
 
-    &:hover {
-      background: rgba(169, 40, 201, 0.1);
-      color: var(--color-violet-accent);
-    }
-  }
-`;
+//     &:hover {
+//       background: rgba(169, 40, 201, 0.1);
+//       color: var(--color-violet-accent);
+//     }
+//   }
+// `;
 
 // Бургер-меню кнопка
-const BurgerButton = styled.button`
-  display: none;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  width: 32px;
-  height: 32px;
-  position: relative;
-  z-index: 110;
+// const BurgerButton = styled.button`
+//   display: none;
+//   background: transparent;
+//   border: none;
+//   cursor: pointer;
+//   width: 32px;
+//   height: 32px;
+//   position: relative;
+//   z-index: 110;
 
-  @media (max-width: 768px) {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-  }
-`;
+//   @media (max-width: 768px) {
+//     display: flex;
+//     flex-direction: column;
+//     justify-content: center;
+//     align-items: center;
+//   }
+// `;
 
 const BurgerButtonClose = styled.button`
   display: none;
@@ -279,8 +279,8 @@ const MobileDropdownContent = styled(motion.div)`
 
 export default function Header() {
   const router = useRouter();
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isDropdownActive, setIsDropdownActive] = useState(false);
+  // const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  // const [isDropdownActive, setIsDropdownActive] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -292,7 +292,7 @@ export default function Header() {
         dropdownRef.current &&
         !dropdownRef.current.contains(e.target as Node)
       ) {
-        setIsDropdownOpen(false);
+        // setIsDropdownOpen(false);
       }
     };
 
@@ -372,14 +372,14 @@ export default function Header() {
     },
   };
 
-  const toggleDropdown = () => {
-    if (!isDropdownOpen) {
-      setIsDropdownActive(true);
-      setIsDropdownOpen(true);
-    } else {
-      setIsDropdownOpen(false);
-    }
-  };
+  // const toggleDropdown = () => {
+  //   if (!isDropdownOpen) {
+  //     setIsDropdownActive(true);
+  //     setIsDropdownOpen(true);
+  //   } else {
+  //     setIsDropdownOpen(false);
+  //   }
+  // };
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
