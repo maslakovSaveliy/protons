@@ -17,10 +17,10 @@ const HeaderContainer = styled.header`
   width: 100%;
   z-index: 100;
   padding: 46.56px 76px;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  background-color: linear-gradient(to right, #1e1e1e, #111111);
+  display: flex;
+  justify-content: space-between;
   align-items: center;
+  background-color: linear-gradient(to right, #1e1e1e, #111111);
 
   & > *:first-child {
     justify-self: start;
@@ -39,12 +39,7 @@ const HeaderContainer = styled.header`
   }
 
   @media (max-width: 768px) {
-    grid-template-columns: 1fr 1fr;
     padding: 24px 36px;
-
-    & > *:nth-child(2) {
-      display: none;
-    }
   }
 
   @media (max-width: 480px) {
@@ -401,7 +396,7 @@ export default function Header() {
           <LogoIcon onClick={() => router.push("/")} />
         </Logo>
 
-        <Nav>
+        {/* <Nav>
           <NavItem>
             <Link href="#">Section</Link>
           </NavItem>
@@ -457,18 +452,18 @@ export default function Header() {
           <NavItem>
             <Link href="#">Section</Link>
           </NavItem>
-        </Nav>
+        </Nav> */}
 
         <div>
-          <NavItem className="desktop-cta">
+          <NavItem>
             <Link href="#">CTA</Link>
           </NavItem>
-          <BurgerButton
+          {/* <BurgerButton
             onClick={toggleMobileMenu}
             className={isMobileMenuOpen ? "active" : ""}
           >
             <Menu color="var(--color-white)" width="32" height="32" />
-          </BurgerButton>
+          </BurgerButton> */}
         </div>
       </HeaderContainer>
 
