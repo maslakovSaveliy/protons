@@ -49,6 +49,12 @@ const VideoBackground = styled.video`
   height: 100%;
   object-fit: cover;
   z-index: 0;
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
+
+  &.loaded {
+    opacity: 1;
+  }
 
   @media (max-width: 768px) {
     object-fit: cover;
@@ -67,7 +73,7 @@ const BackgroundPoster = styled.div`
   background-position: center center;
   background-size: cover;
   z-index: 0;
-  transition: opacity 0.5s ease;
+  transition: opacity 1.5s ease-in-out;
 `;
 
 const ScrollIndicator = styled.div`
@@ -110,10 +116,10 @@ const ScrollIndicator = styled.div`
 `;
 
 export default function MonitorsBlock() {
-  const [videoLoaded, setVideoLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [videoStarted, setVideoStarted] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const posterRef = useRef<HTMLDivElement>(null);
 
   // Определяем мобильное устройство
   useEffect(() => {
@@ -148,46 +154,80 @@ export default function MonitorsBlock() {
 
     return {
       webm: `${baseUrl}.webm${cacheBuster}`,
+      mp4: `${baseUrl}.mp4${cacheBuster}`,
     };
   }, [isMobile]);
 
-  // Оптимизированная загрузка видео
+  // Оптимизированная и плавная загрузка видео
   useEffect(() => {
     if (!videoRef.current) return;
 
     // Настраиваем видео для прогрессивной загрузки
-    videoRef.current.preload = "metadata";
+    videoRef.current.preload = "auto";
 
     const loadVideo = () => {
       if (!videoRef.current) return;
 
-      // Сначала загружаем только метаданные
+      // Загружаем видео
       videoRef.current.load();
 
-      // Устанавливаем обработчики для отслеживания загрузки
+      // Устанавливаем обработчики для отслеживания загрузки и начала воспроизведения
       const handleCanPlay = () => {
         if (videoRef.current && !videoStarted) {
-          // Видео достаточно загрузилось для начала воспроизведения
-          videoRef.current
-            .play()
-            .then(() => {
-              setVideoStarted(true);
-            })
-            .catch((e) => {
-              console.error("Ошибка автовоспроизведения:", e);
-            });
+          // Устанавливаем флаг готовности видео, но не меняем его видимость сразу
+          setVideoStarted(true);
+
+          // Небольшая задержка перед началом воспроизведения для плавного перехода
+          setTimeout(() => {
+            videoRef.current
+              ?.play()
+              .then(() => {
+                setVideoStarted(true);
+                // Показываем видео только после начала воспроизведения
+                setTimeout(() => {
+                  if (videoRef.current) {
+                    videoRef.current.classList.add("loaded");
+                  }
+                }, 100);
+              })
+              .catch((e) => {
+                console.error("Ошибка автовоспроизведения:", e);
+              });
+          }, 300);
+        }
+      };
+
+      const handleLoadedData = () => {
+        // Видео загрузилось, но мы не показываем его сразу
+        setVideoStarted(true);
+      };
+
+      const handleTimeUpdate = () => {
+        // Убеждаемся, что воспроизведение действительно началось перед тем как делать переход
+        if (
+          !videoStarted &&
+          videoRef.current &&
+          videoRef.current.currentTime > 0
+        ) {
+          setVideoStarted(true);
         }
       };
 
       videoRef.current.addEventListener("canplay", handleCanPlay);
+      videoRef.current.addEventListener("loadeddata", handleLoadedData);
+      videoRef.current.addEventListener("timeupdate", handleTimeUpdate);
 
       return () => {
-        videoRef.current?.removeEventListener("canplay", handleCanPlay);
+        if (videoRef.current) {
+          videoRef.current.removeEventListener("canplay", handleCanPlay);
+          videoRef.current.removeEventListener("loadeddata", handleLoadedData);
+          videoRef.current.removeEventListener("timeupdate", handleTimeUpdate);
+        }
       };
     };
 
-    // Инициализируем загрузку видео после монтирования компонента
-    const timer = setTimeout(loadVideo, 100);
+    // Инициализируем загрузку видео после монтирования компонента с небольшой задержкой
+    const timer = setTimeout(loadVideo, 200);
 
     return () => {
       clearTimeout(timer);
@@ -197,28 +237,24 @@ export default function MonitorsBlock() {
   // Обновляем источники при изменении размера экрана
   useEffect(() => {
     if (videoRef.current) {
+      // Сбрасываем состояния при изменении устройства
+      setVideoStarted(false);
+
+      if (videoRef.current.classList.contains("loaded")) {
+        videoRef.current.classList.remove("loaded");
+      }
+
       const urls = getVideoUrl();
 
       // Обновляем источники для тега video
       const sources = videoRef.current.getElementsByTagName("source");
       if (sources[0]) sources[0].src = urls.webm;
+      if (sources[1]) sources[1].src = urls.mp4;
 
       // Перезагружаем видео с новыми источниками
       videoRef.current.load();
-
-      // Если видео уже начало воспроизводиться ранее, продолжаем воспроизведение
-      if (videoStarted) {
-        videoRef.current
-          .play()
-          .catch((e) => console.error("Ошибка автовоспроизведения:", e));
-      }
     }
-  }, [isMobile, getVideoUrl, videoStarted]);
-
-  // Обработчик загрузки видео
-  const handleVideoLoaded = () => {
-    setVideoLoaded(true);
-  };
+  }, [isMobile, getVideoUrl]);
 
   // Функция для скролла к следующему блоку
   const scrollToNextBlock = () => {
@@ -236,21 +272,23 @@ export default function MonitorsBlock() {
 
   return (
     <BlockContainer>
-      {/* Фоновое изображение как постер, пока видео не загружено */}
-      <BackgroundPoster style={{ opacity: videoLoaded ? 0 : 1 }} />
+      {/* Фоновое изображение как постер, которое плавно исчезает, когда видео готово */}
+      <BackgroundPoster
+        ref={posterRef}
+        style={{ opacity: videoStarted ? 0 : 1 }}
+      />
 
-      {/* Видео-фон с оптимизированной загрузкой */}
+      {/* Видео-фон с плавным появлением */}
       <VideoBackground
         ref={videoRef}
-        autoPlay={false} // Отключаем автовоспроизведение, чтобы контролировать его программно
         loop
         muted
         playsInline
-        onLoadedData={handleVideoLoaded}
         poster="/images/background.png"
-        preload="metadata" // Сначала загружаем только метаданные
+        preload="auto"
       >
         <source type="video/webm" />
+        <source type="video/mp4" />
       </VideoBackground>
 
       <ScrollIndicator onClick={scrollToNextBlock}>
