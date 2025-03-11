@@ -33,9 +33,10 @@ export default function MonitorsBlock() {
   // Состояния для управления видео при изменении ориентации
   const [videoStarted, setVideoStarted] = useState(false);
   const [firstFrameLoaded, setFirstFrameLoaded] = useState(false);
+  const [manuallyStarted, setManuallyStarted] = useState(false);
 
   // Определение типа устройства
-  const { initialIsMobile, deviceDetected } = useDeviceDetection();
+  const { initialIsMobile, isMobile, deviceDetected } = useDeviceDetection();
 
   // Определение и отслеживание соотношения сторон
   const { aspectRatioType, detectAspectRatioType } = useAspectRatio();
@@ -46,6 +47,7 @@ export default function MonitorsBlock() {
     firstFrameLoaded: frameLoaded,
     getVideoUrl,
     adjustVideoPosition,
+    startVideoManually,
   } = useVideoBackground({
     videoRef,
     canvasRef,
@@ -72,8 +74,45 @@ export default function MonitorsBlock() {
     setFirstFrameLoaded: () => {},
   });
 
+  // Функция для запуска видео при взаимодействии пользователя
+  const handleUserInteraction = () => {
+    if (isMobile && !manuallyStarted && videoRef.current) {
+      startVideoManually();
+      setManuallyStarted(true);
+    }
+  };
+
+  // Запуск видео при скролле на мобильных устройствах
+  useEffect(() => {
+    const handleScroll = () => handleUserInteraction();
+
+    if (isMobile && !manuallyStarted) {
+      window.addEventListener("scroll", handleScroll, { once: true });
+    }
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [isMobile, manuallyStarted]);
+
+  // Автоматический запуск видео при касании на мобильных устройствах
+  useEffect(() => {
+    const handleTouch = () => handleUserInteraction();
+
+    if (isMobile && !manuallyStarted) {
+      window.addEventListener("touchstart", handleTouch, { once: true });
+    }
+
+    return () => {
+      window.removeEventListener("touchstart", handleTouch);
+    };
+  }, [isMobile, manuallyStarted]);
+
   // Функция для скролла к следующему блоку
   const scrollToNextBlock = () => {
+    // Попытка запустить видео при взаимодействии пользователя
+    handleUserInteraction();
+
     const nextBlock = document.getElementById("EnterJourneyBlock");
     if (nextBlock) {
       nextBlock.scrollIntoView({ behavior: "smooth" });
@@ -87,7 +126,7 @@ export default function MonitorsBlock() {
   };
 
   return (
-    <BlockContainer ref={containerRef}>
+    <BlockContainer ref={containerRef} onClick={handleUserInteraction}>
       {/* Статический фоновый элемент, который всегда отображается первым */}
       <StaticBackground style={{ opacity: videoStarted ? 0 : 1 }} />
 
@@ -107,7 +146,7 @@ export default function MonitorsBlock() {
         playsInline
         poster={getVideoUrl().poster}
         preload="auto"
-        autoPlay
+        autoPlay={!isMobile} // Отключаем автовоспроизведение для мобильных устройств
       />
 
       <ScrollIndicator onClick={scrollToNextBlock}>

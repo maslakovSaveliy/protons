@@ -95,7 +95,7 @@ export const StaticBackground = styled.div`
     background-image: url("/videos/poster-mobile.jpg"),
       url("/images/fallback/poster-mobile.jpg");
     background-position: center center;
-    transform: scale(1.05);
+    /* transform: scale(1.05); */
     transform-origin: center center;
   }
 `;

@@ -90,12 +90,12 @@ export function useVideoBackground({
                 if (initialIsMobile) {
                     // Для портретной ориентации применяем дополнительные стили
                     if (window.innerHeight > window.innerWidth) {
-                        canvas.style.objectPosition = "50% 50%";
-                        canvas.style.transform = "scale(1.1)";
-                        canvas.style.transformOrigin = "center center";
+                        // canvas.style.objectPosition = "50% 50%";
+                        // canvas.style.transform = "scale(1.1)";
+                        // canvas.style.transformOrigin = "center center";
                     } else {
                         // Для ландшафтной ориентации на мобильных
-                        canvas.style.objectPosition = "50% 50%";
+                        // canvas.style.objectPosition = "50% 50%";
                     }
                 }
             } catch (error) {
@@ -146,19 +146,19 @@ export function useVideoBackground({
                 videoRef.current.style.objectFit = "cover";
 
                 // Применяем небольшой масштаб для лучшего заполнения
-                videoRef.current.style.transform = "scale(1.1)";
+                // videoRef.current.style.transform = "scale(1.1)";
                 videoRef.current.style.transformOrigin = "center center";
 
                 // Такие же стили для canvas
                 if (canvasRef.current) {
                     canvasRef.current.style.objectPosition = "50% 50%";
                     canvasRef.current.style.objectFit = "cover";
-                    canvasRef.current.style.transform = "scale(1.1)";
+                    // canvasRef.current.style.transform = "scale(1.1)";
                     canvasRef.current.style.transformOrigin = "center center";
                 }
             } else {
                 // Для ландшафтной ориентации на мобильных устройствах
-                videoRef.current.style.objectPosition = "50% 50%";
+                // videoRef.current.style.objectPosition = "50% 50%";
                 videoRef.current.style.objectFit = "cover";
 
                 // Такие же стили для canvas
@@ -207,12 +207,11 @@ export function useVideoBackground({
 
                 // Дополнительный масштаб для сверх-широких экранов
                 if (currentAspectRatioType === "ultrawide") {
-                    const additionalScale = 1.1; // Немного больше масштабирование
-                    videoRef.current.style.transform = `scale(${additionalScale})`;
+                    // videoRef.current.style.transform = `scale(${additionalScale})`;
                     videoRef.current.style.transformOrigin = "center center";
 
                     if (canvasRef.current) {
-                        canvasRef.current.style.transform = `scale(${additionalScale})`;
+                        // canvasRef.current.style.transform = `scale(${additionalScale})`;
                         canvasRef.current.style.transformOrigin = "center center";
                     }
                 }
@@ -455,6 +454,29 @@ export function useVideoBackground({
         }
     }, [initialIsMobile, getVideoUrl, adjustVideoPosition]);
 
+    // Функция для ручного запуска видео (для мобильных устройств)
+    const startVideoManually = useCallback(() => {
+        if (!videoRef.current || videoStarted) return;
+
+        // Захватываем первый кадр, если он еще не захвачен
+        if (!firstFrameLoaded) {
+            captureFirstFrame();
+        }
+
+        // Запускаем воспроизведение видео
+        videoRef.current.play()
+            .then(() => {
+                // Делаем видео видимым
+                videoRef.current?.classList.add("loaded");
+                setVideoStarted(true);
+            })
+            .catch((error) => {
+                console.error("Ошибка при ручном запуске видео:", error);
+                // Если не удалось запустить видео, хотя бы отображаем первый кадр
+                setFirstFrameLoaded(true);
+            });
+    }, [videoStarted, firstFrameLoaded, captureFirstFrame]);
+
     return {
         videoStarted,
         setVideoStarted,
@@ -465,5 +487,6 @@ export function useVideoBackground({
         getVideoUrl,
         adjustVideoPosition,
         captureFirstFrame,
+        startVideoManually,
     };
 } 
