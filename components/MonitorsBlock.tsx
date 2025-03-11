@@ -205,7 +205,6 @@ export default function MonitorsBlock() {
 
     // Проверяем, загружены ли данные видео
     if (video.readyState === 0) {
-      console.log("Видео еще не инициализировано, пробуем позже");
       // Пробуем еще раз через небольшой промежуток времени
       setTimeout(captureFirstFrame, 100);
       return;
@@ -238,17 +237,8 @@ export default function MonitorsBlock() {
             canvas.style.objectPosition = "50% 50%";
           }
         }
-
-        console.log(
-          "Первый кадр захвачен:",
-          canvas.width,
-          "x",
-          canvas.height,
-          "для",
-          initialIsMobile ? "мобильного" : "десктопа"
-        );
       } catch (error) {
-        console.error("Ошибка при захвате первого кадра:", error);
+        console.error("Error:", error);
 
         // Если возникла ошибка, попробуем еще раз позже
         setTimeout(captureFirstFrame, 500);
@@ -271,9 +261,6 @@ export default function MonitorsBlock() {
       canvasRef.current.style.objectPosition = "center center";
     }
 
-    // Соотношения сторон
-    const containerAspect = containerRect.width / containerRect.height;
-
     // Сначала сбрасываем все предыдущие трансформации
     videoRef.current.style.transform = "none";
     videoRef.current.style.width = "100%";
@@ -294,8 +281,6 @@ export default function MonitorsBlock() {
 
     // Специальная обработка для мобильных устройств
     if (initialIsMobile) {
-      console.log("Применяю стили для мобильного устройства");
-
       // Корректируем позиционирование для мобильных устройств
       if (currentAspectRatioType === "portrait") {
         // Для портретной ориентации на мобильных - центрируем контент
@@ -339,8 +324,6 @@ export default function MonitorsBlock() {
       currentAspectRatioType === "wide" ||
       currentAspectRatioType === "ultrawide"
     ) {
-      console.log("Широкий экран обнаружен:", containerAspect);
-
       // Для широких экранов делаем специальную настройку
       if (videoRef.current.videoWidth && videoRef.current.videoHeight) {
         const videoNativeAspect =
@@ -414,14 +397,13 @@ export default function MonitorsBlock() {
             }, 50);
           })
           .catch((error) => {
-            console.error("Ошибка воспроизведения видео:", error);
+            console.error("Error:", error);
           });
       }
     };
 
     const handleLoadStart = () => {
       // Видео начало загружаться
-      console.log("Видео начало загружаться");
     };
 
     const handlePlaying = () => {
@@ -434,12 +416,6 @@ export default function MonitorsBlock() {
 
     // Обработчик загрузки метаданных видео - вызывается, когда известны размеры видео
     const handleLoadedMetadata = () => {
-      console.log(
-        "Метаданные видео загружены:",
-        videoRef.current?.videoWidth,
-        videoRef.current?.videoHeight
-      );
-
       // После получения метаданных захватываем первый кадр
       captureFirstFrame();
 
@@ -449,8 +425,6 @@ export default function MonitorsBlock() {
 
     // Обработчик окончания видео
     const handleEnded = () => {
-      console.log("Видео закончилось, настраиваем зацикливание первой секунды");
-
       if (videoRef.current) {
         // Отмечаем, что первое полное воспроизведение завершено
         setIsFirstPlayCompleted(true);
@@ -460,7 +434,7 @@ export default function MonitorsBlock() {
 
         // Запускаем видео снова
         videoRef.current.play().catch((error) => {
-          console.error("Ошибка при перезапуске видео после окончания:", error);
+          console.error("Error:", error);
         });
       }
     };
@@ -472,11 +446,6 @@ export default function MonitorsBlock() {
         isFirstPlayCompleted &&
         videoRef.current.currentTime >= (initialIsMobile ? 0.1 : 1.0)
       ) {
-        console.log(
-          `Перематываем на начало после достижения ${
-            initialIsMobile ? "0.1" : "1.0"
-          } секунды`
-        );
         // Если воспроизведение достигло заданного времени и первое воспроизведение завершено,
         // перематываем на начало
         videoRef.current.currentTime = 0;
@@ -522,19 +491,12 @@ export default function MonitorsBlock() {
     // Запускаем только если видео было полностью воспроизведено
     if (!isFirstPlayCompleted || !videoRef.current) return;
 
-    console.log("Активирован отдельный эффект для зацикливания первой секунды");
-
     // Функция для зацикливания первой секунды
     const loopFirstSecond = () => {
       if (
         videoRef.current &&
         videoRef.current.currentTime >= (initialIsMobile ? 0.1 : 1.0)
       ) {
-        console.log(
-          `Перематываем на начало (из отдельного эффекта) - ${
-            initialIsMobile ? "мобильное" : "десктоп"
-          } устройство`
-        );
         videoRef.current.currentTime = 0;
       }
     };
@@ -545,10 +507,7 @@ export default function MonitorsBlock() {
     // Если видео остановлено, запускаем его
     if (videoRef.current.paused) {
       videoRef.current.play().catch((err) => {
-        console.error(
-          "Не удалось запустить видео в эффекте зацикливания:",
-          err
-        );
+        console.error("Error:", err);
       });
     }
 
@@ -571,11 +530,6 @@ export default function MonitorsBlock() {
       const newIsMobile = mobileByWidth || mobileByAgent;
       setIsMobile(newIsMobile);
       setDeviceDetected(true); // Помечаем, что устройство определено
-
-      console.log(
-        "Тип устройства определен:",
-        newIsMobile ? "мобильное" : "десктоп"
-      );
     };
 
     // Выполняем определение устройства сразу после монтирования компонента
@@ -591,10 +545,6 @@ export default function MonitorsBlock() {
       // Обновляем состояние только если оно изменилось
       if (isMobile !== initialIsMobile) {
         setIsMobile(initialIsMobile);
-        console.log(
-          "Состояние устройства изменилось на:",
-          initialIsMobile ? "мобильное" : "десктоп"
-        );
       }
 
       // Определяем тип соотношения сторон
@@ -608,10 +558,6 @@ export default function MonitorsBlock() {
         // Обновляем состояние только если оно изменилось
         if (newAspectRatioType !== aspectRatioType) {
           setAspectRatioType(newAspectRatioType);
-          console.log(
-            "Тип соотношения сторон изменился на:",
-            newAspectRatioType
-          );
         }
       }
 
@@ -678,7 +624,6 @@ export default function MonitorsBlock() {
       const img = new Image();
       img.src = getVideoUrl().poster;
       img.onload = () => {
-        console.log("Постер успешно загружен");
         setPosterError(false);
 
         // Дополнительная логика для оптимизации позиции постера на мобильных устройствах
@@ -701,7 +646,7 @@ export default function MonitorsBlock() {
         }
       };
       img.onerror = (error) => {
-        console.error("Ошибка загрузки основного постера:", error);
+        console.error("Error:", error);
         setPosterError(true);
       };
     };
@@ -745,7 +690,6 @@ export default function MonitorsBlock() {
       // Если ориентация изменилась
       if (lastOrientation !== currentOrientation) {
         lastOrientation = currentOrientation;
-        console.log("Ориентация устройства изменилась на:", currentOrientation);
 
         // Для мобильных устройств может потребоваться замена видео
         if (initialIsMobile) {
