@@ -458,6 +458,12 @@ export function useVideoBackground({
     const startVideoManually = useCallback(() => {
         if (!videoRef.current || videoStarted) return;
 
+        // Для iOS устройств установите громкость в 0 явно
+        if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            videoRef.current.muted = true;
+            videoRef.current.volume = 0;
+        }
+
         // Захватываем первый кадр, если он еще не захвачен
         if (!firstFrameLoaded) {
             captureFirstFrame();

@@ -143,11 +143,10 @@ export default function MonitorsBlock() {
       <VideoBackground
         ref={videoRef}
         muted
-        playsInline
+        playsInline={true}
         poster={getVideoUrl().poster}
         preload="auto"
         autoPlay
-        webkit-playsinline="true"
       />
 
       <ScrollIndicator onClick={scrollToNextBlock}>
