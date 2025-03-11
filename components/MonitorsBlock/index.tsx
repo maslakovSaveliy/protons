@@ -146,7 +146,8 @@ export default function MonitorsBlock() {
         playsInline
         poster={getVideoUrl().poster}
         preload="auto"
-        autoPlay={!isMobile} // Отключаем автовоспроизведение для мобильных устройств
+        autoPlay
+        webkit-playsinline="true"
       />
 
       <ScrollIndicator onClick={scrollToNextBlock}>

@@ -412,11 +412,11 @@ export function useVideoBackground({
                         // В портретной ориентации корректируем позиционирование
                         if (window.innerHeight > window.innerWidth) {
                             staticBg.style.backgroundPosition = "50% 50%";
-                            staticBg.style.transform = "scale(1.1)";
+                            // staticBg.style.transform = "scale(1.1)";
                         } else {
                             // В ландшафтной ориентации на мобильных
                             staticBg.style.backgroundPosition = "50% 50%";
-                            staticBg.style.transform = "scale(1.05)";
+                            // staticBg.style.transform = "scale(1.05)";
                         }
                     }
                 }
