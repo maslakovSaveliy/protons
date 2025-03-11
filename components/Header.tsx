@@ -38,7 +38,7 @@ const HeaderContainer = styled.header`
     padding: 36px 56px;
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 775px) {
     padding: 24px 36px;
   }
 
@@ -81,7 +81,7 @@ const NavItem = styled.div`
   }
 
   &.desktop-cta {
-    @media (max-width: 768px) {
+    @media (max-width: 775px) {
       display: none;
     }
   }
@@ -160,7 +160,7 @@ const NavItem = styled.div`
 //   position: relative;
 //   z-index: 110;
 
-//   @media (max-width: 768px) {
+//   @media (max-width: 775px) {
 //     display: flex;
 //     flex-direction: column;
 //     justify-content: center;
@@ -178,7 +178,7 @@ const BurgerButtonClose = styled.button`
   width: 32px;
   height: 32px;
 
-  @media (max-width: 768px) {
+  @media (max-width: 775px) {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -201,7 +201,7 @@ const MobileMenuOverlay = styled(motion.div)`
   z-index: 100;
   display: none;
 
-  @media (max-width: 768px) {
+  @media (max-width: 775px) {
     display: block;
   }
 `;

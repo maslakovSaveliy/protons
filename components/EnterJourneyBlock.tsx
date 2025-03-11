@@ -53,7 +53,7 @@ const Title = styled.h2`
   text-align: center;
   z-index: 1;
 
-  @media (max-width: 768px) {
+  @media (max-width: 775px) {
     font-size: 3rem;
     margin-bottom: 3rem;
   }
@@ -68,7 +68,7 @@ const EnterKeyContainer = styled(motion.div)`
   position: relative;
   cursor: pointer;
   z-index: 1;
-  @media (max-width: 768px) {
+  @media (max-width: 775px) {
     width: 200px;
     height: 200px;
   }
@@ -89,7 +89,7 @@ const GlowEffect = styled(motion.div)`
     filter: blur(20px);
     opacity: 0.7;
 
-    @media (max-width: 768px) {
+    @media (max-width: 775px) {
       filter: blur(15px);
     }
 

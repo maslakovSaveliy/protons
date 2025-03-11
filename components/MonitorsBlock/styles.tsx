@@ -91,7 +91,7 @@ export const StaticBackground = styled.div`
   z-index: 0;
   transition: opacity 0.8s ease-in-out;
 
-  @media (max-width: 768px) {
+  @media (max-width: 775px) {
     background-image: url("/videos/poster-mobile.jpg"),
       url("/images/fallback/poster-mobile.jpg");
     background-position: center center;
@@ -120,7 +120,7 @@ export const ScrollIndicator = styled.div`
     animation: bounce 2s infinite;
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 775px) {
     font-size: 1.5rem;
     flex-direction: column;
   }

@@ -9,7 +9,7 @@ export function useDeviceDetection() {
     // Начальное определение типа устройства для избежания переключений
     const initialIsMobile =
         typeof window !== "undefined" &&
-        (window.innerWidth <= 768 ||
+        (window.innerWidth <= 775 ||
             /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
                 navigator.userAgent
             ));
@@ -20,7 +20,7 @@ export function useDeviceDetection() {
     // Определение типа устройства - выполняем только один раз при монтировании
     useEffect(() => {
         const detectDevice = () => {
-            const mobileByWidth = window.innerWidth <= 768;
+            const mobileByWidth = window.innerWidth <= 775;
             const mobileByAgent =
                 /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
                     navigator.userAgent
