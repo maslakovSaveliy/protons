@@ -149,6 +149,7 @@ export default function MonitorsBlock() {
   const [firstFrameLoaded, setFirstFrameLoaded] = useState(false);
   const [posterError, setPosterError] = useState(false);
   const [deviceDetected, setDeviceDetected] = useState(false);
+  const [isFirstPlayCompleted, setIsFirstPlayCompleted] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLElement>(null);
@@ -446,11 +447,49 @@ export default function MonitorsBlock() {
       adjustVideoPosition();
     };
 
+    // Обработчик окончания видео
+    const handleEnded = () => {
+      console.log("Видео закончилось, настраиваем зацикливание первой секунды");
+
+      if (videoRef.current) {
+        // Отмечаем, что первое полное воспроизведение завершено
+        setIsFirstPlayCompleted(true);
+
+        // Перематываем видео на начало
+        videoRef.current.currentTime = 0;
+
+        // Запускаем видео снова
+        videoRef.current.play().catch((error) => {
+          console.error("Ошибка при перезапуске видео после окончания:", error);
+        });
+      }
+    };
+
+    // Обработчик для зацикливания первой секунды
+    const handleLoopFirstSecond = () => {
+      if (
+        videoRef.current &&
+        isFirstPlayCompleted &&
+        videoRef.current.currentTime >= (initialIsMobile ? 0.1 : 1.0)
+      ) {
+        console.log(
+          `Перематываем на начало после достижения ${
+            initialIsMobile ? "0.1" : "1.0"
+          } секунды`
+        );
+        // Если воспроизведение достигло заданного времени и первое воспроизведение завершено,
+        // перематываем на начало
+        videoRef.current.currentTime = 0;
+      }
+    };
+
     // События для отслеживания потоковой загрузки
     videoRef.current.addEventListener("canplay", handleCanPlayThrough);
     videoRef.current.addEventListener("loadstart", handleLoadStart);
     videoRef.current.addEventListener("playing", handlePlaying);
     videoRef.current.addEventListener("loadedmetadata", handleLoadedMetadata);
+    videoRef.current.addEventListener("ended", handleEnded);
+    videoRef.current.addEventListener("timeupdate", handleLoopFirstSecond);
 
     return () => {
       if (videoRef.current) {
@@ -461,6 +500,11 @@ export default function MonitorsBlock() {
           "loadedmetadata",
           handleLoadedMetadata
         );
+        videoRef.current.removeEventListener("ended", handleEnded);
+        videoRef.current.removeEventListener(
+          "timeupdate",
+          handleLoopFirstSecond
+        );
       }
     };
   }, [
@@ -470,7 +514,50 @@ export default function MonitorsBlock() {
     captureFirstFrame,
     firstFrameLoaded,
     deviceDetected,
+    isFirstPlayCompleted,
   ]);
+
+  // Добавляем отдельный эффект для отслеживания и зацикливания первой секунды
+  useEffect(() => {
+    // Запускаем только если видео было полностью воспроизведено
+    if (!isFirstPlayCompleted || !videoRef.current) return;
+
+    console.log("Активирован отдельный эффект для зацикливания первой секунды");
+
+    // Функция для зацикливания первой секунды
+    const loopFirstSecond = () => {
+      if (
+        videoRef.current &&
+        videoRef.current.currentTime >= (initialIsMobile ? 0.1 : 1.0)
+      ) {
+        console.log(
+          `Перематываем на начало (из отдельного эффекта) - ${
+            initialIsMobile ? "мобильное" : "десктоп"
+          } устройство`
+        );
+        videoRef.current.currentTime = 0;
+      }
+    };
+
+    // Добавляем обработчик события обновления времени
+    videoRef.current.addEventListener("timeupdate", loopFirstSecond);
+
+    // Если видео остановлено, запускаем его
+    if (videoRef.current.paused) {
+      videoRef.current.play().catch((err) => {
+        console.error(
+          "Не удалось запустить видео в эффекте зацикливания:",
+          err
+        );
+      });
+    }
+
+    return () => {
+      if (videoRef.current) {
+        videoRef.current.removeEventListener("timeupdate", loopFirstSecond);
+      }
+    };
+  }, [isFirstPlayCompleted, initialIsMobile]);
 
   // Определение типа устройства - выполняем только один раз при монтировании
   useEffect(() => {
@@ -723,7 +810,6 @@ export default function MonitorsBlock() {
       {/* Видео-фон с плавным появлением и потоковой загрузкой */}
       <VideoBackground
         ref={videoRef}
-        loop
         muted
         playsInline
         poster={getVideoUrl().poster}
