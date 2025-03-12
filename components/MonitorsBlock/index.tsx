@@ -11,7 +11,6 @@ import ArrowDown from "../icons/ArrowDown";
 
 /**
  * MonitorsBlock - компонент для отображения полноэкранного видео-фона
- * С поддержкой Safari на iOS и предотвращением черного экрана при скролле
  */
 export default function MonitorsBlock() {
   const containerRef = useRef<HTMLElement>(null);
@@ -25,7 +24,7 @@ export default function MonitorsBlock() {
     mp4: "/videos/background-desktop.mp4",
     poster: "/videos/poster-desktop.jpg"
   });
-  const [isScrolling, setIsScrolling] = useState(false);
+  const videoInitialized = useRef(false);
 
   // Определяем тип устройства и браузер
   useEffect(() => {
@@ -79,6 +78,8 @@ export default function MonitorsBlock() {
     if (videoRef.current) {
       videoRef.current.classList.add("loaded");
       setVideoLoaded(true);
+      // Отмечаем, что видео инициализировано
+      videoInitialized.current = true;
     }
   };
 
@@ -110,79 +111,13 @@ export default function MonitorsBlock() {
     }
   };
 
-  // Специальное управление видео для Safari на iOS при скролле
-  useEffect(() => {
-    if (typeof window === 'undefined' || !isIOS) return;
-    
-    // Обработчик начала скролла
-    const handleScrollStart = () => {
-      setIsScrolling(true);
-      
-      // Делаем статический фон видимым во время скролла
-      if (videoLoaded) {
-        const staticBg = document.querySelector('[class^="MonitorsBlock__StaticBackground"]') as HTMLElement | null;
-        if (staticBg) {
-          staticBg.style.opacity = '1';
-        }
-      }
-    };
-    
-    // Обработчик окончания скролла
-    const handleScrollEnd = () => {
-      // Используем таймаут, чтобы избежать лишних срабатываний
-      setTimeout(() => {
-        setIsScrolling(false);
-        
-        // Возвращаем видимость видео после завершения скролла
-        if (videoLoaded && videoRef.current) {
-          const staticBg = document.querySelector('[class^="MonitorsBlock__StaticBackground"]') as HTMLElement | null;
-          if (staticBg) {
-            staticBg.style.opacity = '0';
-          }
-          
-          // Перезапускаем видео
-          videoRef.current.currentTime = 0;
-          videoRef.current.play().catch(() => {
-            // Если не удалось запустить, используем постер
-            console.log("Не удалось перезапустить видео после скролла");
-          });
-        }
-      }, 300);
-    };
-    
-    // Переменная для отслеживания таймаута
-    let scrollTimeout: number | null = null;
-    
-    // Функция обработки скролла с debounce
-    const handleScroll = () => {
-      handleScrollStart();
-      
-      // Очищаем предыдущий таймаут, если он был
-      if (scrollTimeout) {
-        window.clearTimeout(scrollTimeout);
-      }
-      
-      // Устанавливаем новый таймаут для определения завершения скролла
-      scrollTimeout = window.setTimeout(handleScrollEnd, 200);
-    };
-    
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    
-    return () => {
-      if (scrollTimeout) {
-        window.clearTimeout(scrollTimeout);
-      }
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [isIOS, videoLoaded]);
-
   // Специальное управление видео для Safari
   useEffect(() => {
     if (!isSafari || !videoRef.current) return;
 
     // Используем events вместо autoPlay специально для Safari
     const playVideo = () => {
-      if (videoRef.current && !isScrolling) {
+      if (videoRef.current && !videoInitialized.current) {
         // Обязательно обновляем src для актуального устройства
         const source = videoRef.current.querySelector('source');
         if (source) {
@@ -201,44 +136,53 @@ export default function MonitorsBlock() {
       }
     };
 
+    // Для iOS Safari: возобновление видео, когда оно приостанавливается системой
+    const handleIOSVideoPause = () => {
+      if (videoRef.current && videoInitialized.current) {
+        // Небольшая задержка перед возобновлением
+        setTimeout(() => {
+          videoRef.current?.play().catch(() => {
+            // Игнорируем ошибки, иногда Safari не может автоматически возобновить видео
+          });
+        }, 100);
+      }
+    };
+
     // Дополнительные атрибуты и настройки для Safari
     videoRef.current.muted = true;
     videoRef.current.playsInline = true;
     videoRef.current.setAttribute("webkit-playsinline", "true");
     
-    // Для iOS Safari добавляем специальные атрибуты
-    if (isIOS) {
-      videoRef.current.setAttribute("playsinline", "true");
-      videoRef.current.setAttribute("webkit-playsinline", "true");
-      videoRef.current.setAttribute("x5-playsinline", "true");
-      videoRef.current.setAttribute("x5-video-player-type", "h5");
-      videoRef.current.setAttribute("x5-video-player-fullscreen", "true");
-    }
-    
-    // Safari требует пользовательского взаимодействия
+    // Safari требует пользовательского взаимодействия - удаляем обработчик скролла для iOS
     document.addEventListener('click', playVideo, { once: true });
-    document.addEventListener('scroll', playVideo, { once: true });
     document.addEventListener('touchstart', playVideo, { once: true });
     
     // Также пытаемся воспроизвести при загрузке
     videoRef.current.addEventListener('canplay', playVideo, { once: true });
     
+    // Для iOS добавляем обработчики события pause
+    if (isIOS) {
+      videoRef.current.addEventListener('pause', handleIOSVideoPause);
+    }
+    
     return () => {
       document.removeEventListener('click', playVideo);
-      document.removeEventListener('scroll', playVideo);
       document.removeEventListener('touchstart', playVideo);
       if (videoRef.current) {
         videoRef.current.removeEventListener('canplay', playVideo);
+        if (isIOS) {
+          videoRef.current.removeEventListener('pause', handleIOSVideoPause);
+        }
       }
     };
-  }, [isSafari, videoSrc, isScrolling, isIOS]);
+  }, [isSafari, isIOS, videoSrc]);
 
   // Стандартное управление видео для не-Safari браузеров
   useEffect(() => {
     if (isSafari || !videoRef.current) return;
 
     const handleCanPlay = () => {
-      if (videoRef.current) {
+      if (videoRef.current && !videoInitialized.current) {
         videoRef.current.play()
           .then(() => {
             handleVideoLoaded();
@@ -300,7 +244,7 @@ export default function MonitorsBlock() {
   return (
     <BlockContainer ref={containerRef} onClick={handleUserInteraction}>
       {/* Статический фоновый элемент, который всегда отображается первым */}
-      <StaticBackground style={{ opacity: videoLoaded && !isScrolling ? 0 : 1 }} />
+      <StaticBackground style={{ opacity: videoLoaded ? 0 : 1 }} />
 
       {/* Видео с правильным источником в зависимости от устройства */}
       <VideoBackground
@@ -310,7 +254,6 @@ export default function MonitorsBlock() {
         preload="auto"
         poster={getVideoUrl().poster}
         loop
-        style={{ opacity: isScrolling && isIOS ? 0 : '' }}
       >
         <source src={getVideoUrl().mp4} type="video/mp4" />
       </VideoBackground>
