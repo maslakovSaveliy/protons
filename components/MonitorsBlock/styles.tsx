@@ -64,9 +64,24 @@ export const VideoBackground = styled.video`
   -webkit-perspective: 1000;
   background-color: transparent;
   
-  /* Добавляем важный атрибут для автоматического воспроизведения */
+  /* Улучшения для iOS Safari */
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  -webkit-overflow-scrolling: touch;
+  
+  /* Скрываем кнопку воспроизведения */
+  &::-webkit-media-controls {
+    display: none !important;
+  }
+  
   &::-webkit-media-controls-start-playback-button {
     display: none !important;
+  }
+  
+  /* Важные свойства для предотвращения проблем в iOS Safari */
+  &[playsinline] {
+    object-fit: cover;
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
   }
 
   &.loaded {
@@ -89,6 +104,11 @@ export const StaticBackground = styled.div`
   background-position: center center;
   z-index: 0;
   transition: opacity 0.8s ease-in-out;
+  
+  /* Оптимизация для мобильных устройств */
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  will-change: opacity;
 
   @media (max-width: 775px) {
     background-image: url("/videos/poster-mobile.jpg"),
