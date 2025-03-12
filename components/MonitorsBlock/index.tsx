@@ -16,14 +16,22 @@ export default function MonitorsBlock() {
   const containerRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoLoaded, setVideoLoaded] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isMobile, setIsMobile] = useState(false);
   const [isSafari, setIsSafari] = useState(false);
+  const [videoSrc, setVideoSrc] = useState({
+    mp4: "/videos/background-desktop.mp4",
+    poster: "/videos/poster-desktop.jpg"
+  });
 
   // Определяем тип устройства и браузер
   useEffect(() => {
     const checkIfMobile = () => {
       const mobile = window.innerWidth <= 775;
       setIsMobile(mobile);
+      
+      // Обновляем источники видео
+      updateVideoSources(mobile);
     };
     
     // Определяем, является ли браузер Safari
@@ -31,6 +39,22 @@ export default function MonitorsBlock() {
       const isSafariCheck = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
       const isIOSCheck = /iPhone|iPad|iPod/i.test(navigator.userAgent);
       setIsSafari(isSafariCheck || isIOSCheck);
+    };
+    
+    // Функция для обновления источников видео
+    const updateVideoSources = (isMobileDevice: boolean) => {
+      const baseUrl = isMobileDevice
+        ? "/videos/background-mobile"
+        : "/videos/background-desktop";
+
+      const poster = isMobileDevice
+        ? "/videos/poster-mobile.jpg"
+        : "/videos/poster-desktop.jpg";
+
+      setVideoSrc({
+        mp4: `${baseUrl}.mp4`,
+        poster,
+      });
     };
     
     checkIfMobile();
@@ -41,23 +65,9 @@ export default function MonitorsBlock() {
   }, []);
 
   // Получаем URL видео в зависимости от типа устройства
+  // Эта функция безопасна для серверного рендеринга, так как использует состояние
   const getVideoUrl = () => {
-    // Определяем тип устройства по актуальной ширине экрана
-    // а не по предварительно определенному флагу, что важно для Safari
-    const currentIsMobile = window.innerWidth <= 775;
-    
-    const baseUrl = currentIsMobile
-      ? "/videos/background-mobile"
-      : "/videos/background-desktop";
-
-    const poster = currentIsMobile
-      ? "/videos/poster-mobile.jpg"
-      : "/videos/poster-desktop.jpg";
-
-    return {
-      mp4: `${baseUrl}.mp4`,
-      poster,
-    };
+    return videoSrc;
   };
 
   // Обработчик загрузки видео
@@ -70,6 +80,8 @@ export default function MonitorsBlock() {
 
   // Функция для скролла к следующему блоку
   const scrollToNextBlock = () => {
+    if (typeof window === 'undefined') return;
+    
     const nextBlock = document.getElementById("EnterJourneyBlock");
     if (nextBlock) {
       nextBlock.scrollIntoView({ behavior: "smooth" });
@@ -140,7 +152,7 @@ export default function MonitorsBlock() {
         videoRef.current.removeEventListener('canplay', playVideo);
       }
     };
-  }, [isSafari, isMobile]);
+  }, [isSafari, videoSrc]);
 
   // Стандартное управление видео для не-Safari браузеров
   useEffect(() => {
@@ -169,7 +181,7 @@ export default function MonitorsBlock() {
 
   // Обновляем видео при изменении устройства
   useEffect(() => {
-    if (!videoRef.current) return;
+    if (typeof window === 'undefined' || !videoRef.current) return;
     
     const updateVideoSource = () => {
       const source = videoRef.current?.querySelector('source');
@@ -204,7 +216,7 @@ export default function MonitorsBlock() {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('orientationchange', handleOrientationChange);
     };
-  }, []);
+  }, [videoSrc]);
 
   return (
     <BlockContainer ref={containerRef} onClick={handleUserInteraction}>
