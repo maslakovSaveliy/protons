@@ -1,123 +1,79 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { useVideoBackground } from "./hooks/useVideoBackground";
-import { useDeviceDetection } from "./hooks/useDeviceDetection";
-import { useAspectRatio } from "./hooks/useAspectRatio";
-import { useOrientationChange } from "./hooks/useOrientationChange";
 import {
   BlockContainer,
   StaticBackground,
-  FirstFrameCanvas,
   VideoBackground,
   ScrollIndicator,
 } from "./styles";
 import ArrowDown from "../icons/ArrowDown";
 
 /**
- * MonitorsBlock - компонент для отображения полноэкранного видео-фона с адаптивным поведением
- *
- * Компонент обеспечивает:
- * - Адаптивное отображение видео на разных устройствах и ориентациях
- * - Плавную загрузку с отображением статического фона до загрузки видео
- * - Захват первого кадра для быстрого отображения
- * - Оптимизацию воспроизведения видео (зацикливание первой секунды)
- * - Корректное масштабирование для разных соотношений сторон
+ * MonitorsBlock - компонент для отображения полноэкранного видео-фона
  */
 export default function MonitorsBlock() {
-  // Refs для DOM-элементов
   const containerRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSafari, setIsSafari] = useState(false);
 
-  // Состояния для управления видео при изменении ориентации
-  const [videoStarted, setVideoStarted] = useState(false);
-  const [firstFrameLoaded, setFirstFrameLoaded] = useState(false);
-  const [manuallyStarted, setManuallyStarted] = useState(false);
-
-  // Определение типа устройства
-  const { initialIsMobile, isMobile, deviceDetected } = useDeviceDetection();
-
-  // Определение и отслеживание соотношения сторон
-  const { aspectRatioType, detectAspectRatioType } = useAspectRatio();
-
-  // Управление видео-фоном
-  const {
-    videoStarted: videoBackgroundStarted,
-    firstFrameLoaded: frameLoaded,
-    getVideoUrl,
-    adjustVideoPosition,
-    startVideoManually,
-  } = useVideoBackground({
-    videoRef,
-    canvasRef,
-    containerRef,
-    initialIsMobile,
-    deviceDetected,
-    aspectRatioType,
-    detectAspectRatioType,
-  });
-
-  // Синхронизируем состояния
+  // Определяем тип устройства и браузер
   useEffect(() => {
-    setVideoStarted(videoBackgroundStarted);
-    setFirstFrameLoaded(frameLoaded);
-  }, [videoBackgroundStarted, frameLoaded]);
+    const checkIfMobile = () => {
+      const mobile = window.innerWidth <= 775;
+      setIsMobile(mobile);
+    };
+    
+    // Определяем, является ли браузер Safari
+    const checkIfSafari = () => {
+      const isSafariCheck = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+      const isIOSCheck = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      setIsSafari(isSafariCheck || isIOSCheck);
+    };
+    
+    checkIfMobile();
+    checkIfSafari();
+    
+    window.addEventListener('resize', checkIfMobile);
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
-  // Обработка изменения ориентации устройства
-  useOrientationChange({
-    initialIsMobile,
-    videoRef,
-    getVideoUrl,
-    adjustVideoPosition,
-    setVideoStarted: () => {},
-    setFirstFrameLoaded: () => {},
-  });
+  // Получаем URL видео в зависимости от типа устройства
+  const getVideoUrl = () => {
+    // Определяем тип устройства по актуальной ширине экрана
+    // а не по предварительно определенному флагу, что важно для Safari
+    const currentIsMobile = window.innerWidth <= 775;
+    
+    const baseUrl = currentIsMobile
+      ? "/videos/background-mobile"
+      : "/videos/background-desktop";
 
-  // Функция для запуска видео при взаимодействии пользователя
-  const handleUserInteraction = () => {
-    if (isMobile && !manuallyStarted && videoRef.current) {
-      startVideoManually();
-      setManuallyStarted(true);
+    const poster = currentIsMobile
+      ? "/videos/poster-mobile.jpg"
+      : "/videos/poster-desktop.jpg";
+
+    return {
+      mp4: `${baseUrl}.mp4`,
+      poster,
+    };
+  };
+
+  // Обработчик загрузки видео
+  const handleVideoLoaded = () => {
+    if (videoRef.current) {
+      videoRef.current.classList.add("loaded");
+      setVideoLoaded(true);
     }
   };
 
-  // Запуск видео при скролле на мобильных устройствах
-  useEffect(() => {
-    const handleScroll = () => handleUserInteraction();
-
-    if (isMobile && !manuallyStarted) {
-      window.addEventListener("scroll", handleScroll, { once: true });
-    }
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, [isMobile, manuallyStarted]);
-
-  // Автоматический запуск видео при касании на мобильных устройствах
-  useEffect(() => {
-    const handleTouch = () => handleUserInteraction();
-
-    if (isMobile && !manuallyStarted) {
-      window.addEventListener("touchstart", handleTouch, { once: true });
-    }
-
-    return () => {
-      window.removeEventListener("touchstart", handleTouch);
-    };
-  }, [isMobile, manuallyStarted]);
-
   // Функция для скролла к следующему блоку
   const scrollToNextBlock = () => {
-    // Попытка запустить видео при взаимодействии пользователя
-    handleUserInteraction();
-
     const nextBlock = document.getElementById("EnterJourneyBlock");
     if (nextBlock) {
       nextBlock.scrollIntoView({ behavior: "smooth" });
     } else {
-      // Прокрутить на высоту экрана вниз как запасной вариант
       window.scrollBy({
         top: window.innerHeight,
         behavior: "smooth",
@@ -125,29 +81,147 @@ export default function MonitorsBlock() {
     }
   };
 
+  // Ручная проверка и запуск видео при взаимодействии пользователя
+  const handleUserInteraction = () => {
+    if (videoRef.current && !videoLoaded) {
+      videoRef.current.play()
+        .then(() => {
+          handleVideoLoaded();
+        })
+        .catch(error => {
+          console.error("Не удалось воспроизвести видео:", error);
+        });
+    }
+  };
+
+  // Специальное управление видео для Safari
+  useEffect(() => {
+    if (!isSafari || !videoRef.current) return;
+
+    // Используем events вместо autoPlay специально для Safari
+    const playVideo = () => {
+      if (videoRef.current) {
+        // Обязательно обновляем src для актуального устройства
+        const source = videoRef.current.querySelector('source');
+        if (source) {
+          source.src = getVideoUrl().mp4;
+          videoRef.current.poster = getVideoUrl().poster;
+          videoRef.current.load();
+        }
+        
+        videoRef.current.play()
+          .then(() => {
+            handleVideoLoaded();
+          })
+          .catch(error => {
+            console.error("Safari: Не удалось воспроизвести видео:", error);
+          });
+      }
+    };
+
+    // Дополнительные атрибуты и настройки для Safari
+    videoRef.current.muted = true;
+    videoRef.current.playsInline = true;
+    videoRef.current.setAttribute("webkit-playsinline", "true");
+    
+    // Safari требует пользовательского взаимодействия
+    document.addEventListener('click', playVideo, { once: true });
+    document.addEventListener('scroll', playVideo, { once: true });
+    document.addEventListener('touchstart', playVideo, { once: true });
+    
+    // Также пытаемся воспроизвести при загрузке
+    videoRef.current.addEventListener('canplay', playVideo, { once: true });
+    
+    return () => {
+      document.removeEventListener('click', playVideo);
+      document.removeEventListener('scroll', playVideo);
+      document.removeEventListener('touchstart', playVideo);
+      if (videoRef.current) {
+        videoRef.current.removeEventListener('canplay', playVideo);
+      }
+    };
+  }, [isSafari, isMobile]);
+
+  // Стандартное управление видео для не-Safari браузеров
+  useEffect(() => {
+    if (isSafari || !videoRef.current) return;
+
+    const handleCanPlay = () => {
+      if (videoRef.current) {
+        videoRef.current.play()
+          .then(() => {
+            handleVideoLoaded();
+          })
+          .catch(() => {
+            console.log("Автоматическое воспроизведение не удалось, ожидаем взаимодействия пользователя");
+          });
+      }
+    };
+
+    videoRef.current.addEventListener('canplay', handleCanPlay);
+    
+    return () => {
+      if (videoRef.current) {
+        videoRef.current.removeEventListener('canplay', handleCanPlay);
+      }
+    };
+  }, [isSafari]);
+
+  // Обновляем видео при изменении устройства
+  useEffect(() => {
+    if (!videoRef.current) return;
+    
+    const updateVideoSource = () => {
+      const source = videoRef.current?.querySelector('source');
+      if (source) {
+        const urls = getVideoUrl();
+        source.src = urls.mp4;
+        if (videoRef.current) {
+          videoRef.current.poster = urls.poster;
+          videoRef.current.load();
+        }
+      }
+    };
+    
+    // Первоначальное обновление
+    updateVideoSource();
+    
+    // Обработчики для изменения размера окна и ориентации
+    const handleResize = () => {
+      updateVideoSource();
+    };
+    
+    const handleOrientationChange = () => {
+      setTimeout(() => {
+        updateVideoSource();
+      }, 300); // Даем время для завершения смены ориентации
+    };
+    
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleOrientationChange);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleOrientationChange);
+    };
+  }, []);
+
   return (
     <BlockContainer ref={containerRef} onClick={handleUserInteraction}>
       {/* Статический фоновый элемент, который всегда отображается первым */}
-      <StaticBackground style={{ opacity: videoStarted ? 0 : 1 }} />
+      <StaticBackground style={{ opacity: videoLoaded ? 0 : 1 }} />
 
-      {/* Canvas для первого кадра вместо фонового изображения */}
-      <FirstFrameCanvas
-        ref={canvasRef}
-        style={{
-          opacity: firstFrameLoaded && !videoStarted ? 1 : 0,
-          display: firstFrameLoaded ? "block" : "none",
-        }}
-      />
-
-      {/* Видео-фон с плавным появлением и потоковой загрузкой */}
+      {/* Видео с правильным источником в зависимости от устройства */}
       <VideoBackground
         ref={videoRef}
         muted
-        playsInline={true}
-        poster={getVideoUrl().poster}
+        playsInline
         preload="auto"
-        autoPlay
-      />
+        poster={getVideoUrl().poster}
+        loop
+      >
+        <source src={getVideoUrl().mp4} type="video/mp4" />
+      </VideoBackground>
 
       <ScrollIndicator onClick={scrollToNextBlock}>
         <span>Scroll for more</span>

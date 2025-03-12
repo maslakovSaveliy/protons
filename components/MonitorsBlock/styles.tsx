@@ -54,25 +54,24 @@ export const VideoBackground = styled.video`
   z-index: 0;
   opacity: 0;
   transition: opacity 0.8s ease-in-out;
+  
+  /* Оптимизация для Safari */
+  transform: translate3d(0, 0, 0);
+  will-change: opacity;
+  -webkit-transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-perspective: 1000;
+  background-color: transparent;
+  
+  /* Добавляем важный атрибут для автоматического воспроизведения */
+  &::-webkit-media-controls-start-playback-button {
+    display: none !important;
+  }
 
   &.loaded {
     opacity: 1;
   }
-`;
-
-/**
- * Canvas для отображения первого кадра видео до его загрузки
- */
-export const FirstFrameCanvas = styled.canvas`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center center;
-  z-index: 0;
-  transition: opacity 0.8s ease-in-out;
 `;
 
 /**
@@ -95,8 +94,6 @@ export const StaticBackground = styled.div`
     background-image: url("/videos/poster-mobile.jpg"),
       url("/images/fallback/poster-mobile.jpg");
     background-position: center center;
-    /* transform: scale(1.05); */
-    transform-origin: center center;
   }
 `;
 

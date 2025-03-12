@@ -241,21 +241,53 @@ export function useVideoBackground({
                     captureFirstFrame();
                 }
 
-                videoRef.current
-                    .play()
-                    .then(() => {
-                        // Делаем видео видимым
-                        videoRef.current?.classList.add("loaded");
-                        setVideoStarted(true);
+                // Для Safari и iOS устройств
+                const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+                const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-                        // Добавляем небольшую задержку перед финальной настройкой позиции
-                        setTimeout(() => {
-                            adjustVideoPosition();
-                        }, 50);
-                    })
-                    .catch((error) => {
-                        console.error("Error:", error);
-                    });
+                if (isIOS || isSafari) {
+                    videoRef.current.setAttribute('playsinline', 'true');
+                    videoRef.current.setAttribute('webkit-playsinline', 'true');
+                    videoRef.current.muted = true;
+                    videoRef.current.volume = 0;
+                }
+
+                const playPromise = videoRef.current.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise
+                        .then(() => {
+                            // Делаем видео видимым
+                            videoRef.current?.classList.add("loaded");
+                            setVideoStarted(true);
+
+                            // Добавляем небольшую задержку перед финальной настройкой позиции
+                            setTimeout(() => {
+                                adjustVideoPosition();
+                            }, 50);
+                        })
+                        .catch((error) => {
+                            console.error("Error:", error);
+                            
+                            // Для Safari пробуем еще один подход
+                            if (isIOS || isSafari) {
+                                // Отложенная попытка воспроизведения для Safari
+                                setTimeout(() => {
+                                    if (videoRef.current) {
+                                        videoRef.current.play()
+                                            .then(() => {
+                                                videoRef.current?.classList.add("loaded");
+                                                setVideoStarted(true);
+                                            })
+                                            .catch(() => {
+                                                // Если снова не удалось, показываем хотя бы первый кадр
+                                                setFirstFrameLoaded(true);
+                                            });
+                                    }
+                                }, 100);
+                            }
+                        });
+                }
             }
         };
 
@@ -443,11 +475,15 @@ export function useVideoBackground({
 
             const urls = getVideoUrl();
 
-            // Устанавливаем атрибуты для потоковой загрузки
-            videoRef.current.src = urls.mp4;
-
-            // Предварительно загружаем несколько секунд видео, затем запускаем воспроизведение
-            videoRef.current.load();
+            // Находим элемент source внутри видео
+            const sourceElement = videoRef.current.querySelector('source');
+            if (sourceElement) {
+                sourceElement.src = urls.mp4;
+                // Устанавливаем постер на само видео
+                videoRef.current.poster = urls.poster;
+                // Обновляем видео, чтобы применить новый источник
+                videoRef.current.load();
+            }
 
             // Обновляем позиционирование при изменении источника
             adjustVideoPosition();
@@ -458,10 +494,17 @@ export function useVideoBackground({
     const startVideoManually = useCallback(() => {
         if (!videoRef.current || videoStarted) return;
 
-        // Для iOS устройств установите громкость в 0 явно
-        if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        // Для iOS устройств делаем дополнительные настройки для Safari
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        if (isIOS || isSafari) {
             videoRef.current.muted = true;
             videoRef.current.volume = 0;
+            
+            // Дополнительно для Safari
+            videoRef.current.setAttribute('playsinline', 'true');
+            videoRef.current.setAttribute('webkit-playsinline', 'true');
         }
 
         // Захватываем первый кадр, если он еще не захвачен
@@ -469,18 +512,41 @@ export function useVideoBackground({
             captureFirstFrame();
         }
 
-        // Запускаем воспроизведение видео
-        videoRef.current.play()
-            .then(() => {
-                // Делаем видео видимым
-                videoRef.current?.classList.add("loaded");
-                setVideoStarted(true);
-            })
-            .catch((error) => {
-                console.error("Ошибка при ручном запуске видео:", error);
-                // Если не удалось запустить видео, хотя бы отображаем первый кадр
-                setFirstFrameLoaded(true);
-            });
+        // Запускаем воспроизведение видео с обработкой для Safari
+        const playPromise = videoRef.current.play();
+        
+        if (playPromise !== undefined) {
+            playPromise
+                .then(() => {
+                    // Делаем видео видимым
+                    videoRef.current?.classList.add("loaded");
+                    setVideoStarted(true);
+                })
+                .catch((error) => {
+                    console.error("Ошибка при ручном запуске видео:", error);
+                    
+                    // Для Safari: пробуем еще один способ запуска
+                    if (isIOS || isSafari) {
+                        setTimeout(() => {
+                            if (videoRef.current) {
+                                videoRef.current.play()
+                                    .then(() => {
+                                        videoRef.current?.classList.add("loaded");
+                                        setVideoStarted(true);
+                                    })
+                                    .catch((retryError) => {
+                                        console.error("Повторная ошибка:", retryError);
+                                        // Если не удалось запустить видео, хотя бы отображаем первый кадр
+                                        setFirstFrameLoaded(true);
+                                    });
+                            }
+                        }, 100);
+                    } else {
+                        // Если не удалось запустить видео, хотя бы отображаем первый кадр
+                        setFirstFrameLoaded(true);
+                    }
+                });
+        }
     }, [videoStarted, firstFrameLoaded, captureFirstFrame]);
 
     return {

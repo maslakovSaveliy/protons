@@ -32,8 +32,8 @@ export default function EnterButton() {
       >
         <rect fill="white" x="-0.470001" width="416" height="336" />
         <path
-          fill-rule="evenodd"
-          clip-rule="evenodd"
+          fillRule="evenodd"
+          clipRule="evenodd"
           d="M412 316.513V19.8975H411.968C411.968 11.1221 404.846 4 396.071 4H148.928C140.153 4 133.031 11.1221 133.031 19.8975V154.358H19.4275C10.6521 154.358 3.53 161.48 3.53 170.256V316.513C3.53 325.288 10.6521 332.41 19.4275 332.41H396.103C400.713 332.41 404.846 330.439 407.771 327.323C409.107 325.861 410.188 324.144 410.919 322.268C411.618 320.487 412 318.548 412 316.513Z"
         />
       </mask>
@@ -75,8 +75,8 @@ export default function EnterButton() {
           y2="332.41"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#F2BEFF" />
-          <stop offset="1" stop-color="#CE59EB" />
+          <stop stopColor="#F2BEFF" />
+          <stop offset="1" stopColor="#CE59EB" />
         </linearGradient>
       </defs>
     </svg>
