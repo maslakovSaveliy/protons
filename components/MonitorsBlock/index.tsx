@@ -25,6 +25,7 @@ export default function MonitorsBlock() {
     poster: "/videos/poster-desktop.jpg"
   });
   const videoInitialized = useRef(false);
+  const isFirstPlayCompleted = useRef(false);
 
   // Определяем тип устройства и браузер
   useEffect(() => {
@@ -110,6 +111,65 @@ export default function MonitorsBlock() {
         });
     }
   };
+
+  // Эффект для зацикливания первой секунды
+  useEffect(() => {
+    if (typeof window === 'undefined' || !videoRef.current) return;
+    
+    // Обработчик окончания видео
+    const handleEnded = () => {
+      if (videoRef.current) {
+        // Отмечаем, что первое полное воспроизведение завершено
+        isFirstPlayCompleted.current = true;
+        
+        // Перематываем видео на начало
+        videoRef.current.currentTime = 0;
+        
+        // Запускаем видео снова
+        videoRef.current.play().catch(error => {
+          console.error("Ошибка при перезапуске видео:", error);
+        });
+      }
+    };
+    
+    // Обработчик для зацикливания первой секунды
+    const handleLoopFirstSecond = () => {
+      const currentIsMobile = window.innerWidth <= 775;
+      
+      if (
+        videoRef.current &&
+        isFirstPlayCompleted.current &&
+        videoRef.current.currentTime >= (currentIsMobile ? 0.1 : 1.0)
+      ) {
+        // Если воспроизведение достигло заданного времени и первое воспроизведение завершено,
+        // перематываем на начало
+        videoRef.current.currentTime = 0;
+      }
+    };
+    
+    // Обработчик изменения видимости страницы
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && videoRef.current && videoInitialized.current) {
+        // Если страница стала видимой, перезапускаем видео
+        videoRef.current.play().catch(() => {
+          // Игнорируем ошибки - некоторые браузеры могут блокировать автовоспроизведение
+        });
+      }
+    };
+    
+    // Добавляем обработчики событий
+    videoRef.current.addEventListener('ended', handleEnded);
+    videoRef.current.addEventListener('timeupdate', handleLoopFirstSecond);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      if (videoRef.current) {
+        videoRef.current.removeEventListener('ended', handleEnded);
+        videoRef.current.removeEventListener('timeupdate', handleLoopFirstSecond);
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   // Специальное управление видео для Safari
   useEffect(() => {
@@ -253,7 +313,6 @@ export default function MonitorsBlock() {
         playsInline
         preload="auto"
         poster={getVideoUrl().poster}
-        loop
       >
         <source src={getVideoUrl().mp4} type="video/mp4" />
       </VideoBackground>
